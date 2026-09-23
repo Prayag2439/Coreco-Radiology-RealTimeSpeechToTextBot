@@ -13,7 +13,7 @@ export const Header = ({ isConnected, activeModel, latencyMs = 24 }) => {
         />
         <div style={{ width: '1px', height: '28px', backgroundColor: '#e2e8f0', margin: '0 0.25rem' }} />
         <div>
-          <h1 className="brand-title-black">RAD-STT // Medical Dictation</h1>
+          <h1 className="brand-title-black">RAD-STT Medical Dictation</h1>
           <div className="brand-subtitle-gray">
             Radiology Real-Time Speech-to-Text Dictation Suite
           </div>

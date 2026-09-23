@@ -1,0 +1,53 @@
+{
+  "attribution": "BodyParts3D, (c) The Database Center for Life Science licensed under CC Attribution 4.0 International",
+  "structures": {
+    "FJ3369": {
+      "file": "FJ3369.obj",
+      "name": "Right Inferior Nasal Concha",
+      "concept_id": "FMA54737",
+      "category": "Nasal Airway",
+      "finding": "Right inferior nasal concha (BodyParts3D polygon mesh) — evaluate for mucosal thickening and luminal narrowing.",
+      "defaultColor": 4116448
+    },
+    "FJ3263": {
+      "file": "FJ3263.obj",
+      "name": "Left Inferior Nasal Concha",
+      "concept_id": "FMA54738",
+      "category": "Nasal Airway",
+      "finding": "Left inferior nasal concha (BodyParts3D polygon mesh) — evaluate for mucosal thickening and luminal narrowing.",
+      "defaultColor": 4116448
+    },
+    "FJ3395": {
+      "file": "FJ3395.obj",
+      "name": "Vomer (Posteroinferior Septum)",
+      "concept_id": "FMA9710",
+      "category": "Midline Nasal Skeleton",
+      "finding": "Vomer bone (BodyParts3D polygon mesh) — posterior-inferior bony nasal septum.",
+      "defaultColor": 9085358
+    },
+    "FJ2557": {
+      "file": "FJ2557.obj",
+      "name": "Nasal Septal Cartilage",
+      "concept_id": "FMA54375",
+      "category": "Midline Nasal Skeleton",
+      "finding": "Septal cartilage (BodyParts3D polygon mesh) — evaluate for deviation and spurring.",
+      "defaultColor": 4116448
+    },
+    "FJ3394": {
+      "file": "FJ3394.obj",
+      "name": "Sphenoid Bone",
+      "concept_id": "FMA52736",
+      "category": "Central Skull Base",
+      "finding": "Sphenoid bone (BodyParts3D polygon mesh) — body, greater/lesser wings, and pterygoid processes.",
+      "defaultColor": 13751771
+    },
+    "FJ3199": {
+      "file": "FJ3199.obj",
+      "name": "Ethmoid Bone & Air Cells",
+      "concept_id": "FMA52740",
+      "category": "Anterior Skull Base",
+      "finding": "Ethmoid bone (BodyParts3D polygon mesh) — cribriform plate, perpendicular plate, and ethmoid labyrinth.",
+      "defaultColor": 12436426
+    }
+  }
+}

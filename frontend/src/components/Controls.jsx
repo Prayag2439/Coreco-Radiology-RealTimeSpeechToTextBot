@@ -12,8 +12,8 @@ export const Controls = ({
   isConnected = true,
 }) => {
   return (
-    <div className="controls-bar glass-panel-white">
-      {/* Model Selection Pills */}
+    <div className="controls-bar glass-panel-white" style={{ justifyContent: 'center' }}>
+      {/* Model Selection Pills - Commented out: Gemini Live is used by default
       <div className="control-group">
         <span className="control-label">AI ENGINE</span>
         <div className="pill-selector-white">
@@ -41,6 +41,7 @@ export const Controls = ({
           </button>
         </div>
       </div>
+      */}
 
       {/* Main Dictate Trigger Button - Jet Black with high contrast */}
       <button

@@ -27,7 +27,7 @@ export class AudioStreamer {
   /**
    * Establish WebSocket connection to backend.
    */
-  async connect(wsUrl = `ws://${window.location.hostname}:8000/ws/dictate`) {
+  async connect(wsUrl = `ws://${window.location.hostname}:5001/ws/dictate`) {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(wsUrl);

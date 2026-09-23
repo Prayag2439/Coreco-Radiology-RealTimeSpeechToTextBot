@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "5001:5001"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -14,7 +14,7 @@ services:
       - VAD_MODE=${VAD_MODE:-2}
       - VAD_HANGOVER_FRAMES=${VAD_HANGOVER_FRAMES:-30}
       - HOST=0.0.0.0
-      - PORT=8000
+      - PORT=5001
     env_file:
       - backend/.env
     restart: unless-stopped
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "3000:80"
+      - "5000:80"
     depends_on:
       - backend
     restart: unless-stopped

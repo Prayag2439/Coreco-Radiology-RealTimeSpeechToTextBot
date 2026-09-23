@@ -30,7 +30,7 @@ export function App() {
     const connectWebSocket = async () => {
       try {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.hostname}:8000/ws/dictate`;
+        const wsUrl = `${wsProtocol}//${window.location.hostname}:5001/ws/dictate`;
 
         await streamer.connect(wsUrl);
         setIsConnected(true);

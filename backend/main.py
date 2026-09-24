@@ -118,8 +118,18 @@ async def websocket_dictate(websocket: WebSocket):
             loop,
         )
 
+    _last_logged_text = ""
+
     def handle_transcript_update(text: str, is_final: bool):
         """Dispatches full interim/final transcription to frontend client."""
+        nonlocal _last_logged_text
+        if is_final:
+            logger.info("[FINAL TRANSCRIPT]: %s", text)
+            _last_logged_text = ""
+        elif text != _last_logged_text:
+            logger.info("[LIVE TRANSCRIPT]: %s", text)
+            _last_logged_text = text
+
         asyncio.run_coroutine_threadsafe(
             _safe_send({
                 "type": "transcript",
@@ -222,6 +232,10 @@ async def websocket_dictate(websocket: WebSocket):
 
         while True:
             message = await websocket.receive()
+            if message.get("type") == "websocket.disconnect":
+                logger.info("Client disconnected from /ws/dictate")
+                break
+
             if "bytes" in message and message["bytes"]:
                 audio_bytes = message["bytes"]
                 rms_val = calculate_rms(audio_bytes)
@@ -271,8 +285,8 @@ async def websocket_dictate(websocket: WebSocket):
                 except json.JSONDecodeError:
                     pass
 
-    except WebSocketDisconnect:
-        logger.info("Client disconnected from /ws/dictate")
+    except (WebSocketDisconnect, RuntimeError) as e:
+        logger.info("Client disconnected from /ws/dictate: %s", e)
     except Exception as e:
         logger.error("Error in websocket session: %s", e)
     finally:

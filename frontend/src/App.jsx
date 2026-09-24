@@ -18,6 +18,7 @@ export function App() {
   const [statusText, setStatusText] = useState('Connecting to Radiology STT Backend...');
 
   const streamerRef = useRef(null);
+  const connectWebSocketRef = useRef(null);
   const streamingTimerRef = useRef(null);
   const baseTranscriptRef = useRef('');
   const offlineSimIntervalRef = useRef(null);
@@ -27,35 +28,75 @@ export function App() {
     const streamer = new AudioStreamer();
     streamerRef.current = streamer;
 
+    let isMounted = true;
+    let reconnectTimer = null;
+    let isConnecting = false;
+
+    const scheduleReconnect = (delay = 2000) => {
+      if (!isMounted) return;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(connectWebSocket, delay);
+    };
+
+    let activePort = null;
+
     const connectWebSocket = async () => {
+      if (!isMounted || isConnecting) return;
+      isConnecting = true;
       try {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.hostname}:5001/ws/dictate`;
+        const hostname = window.location.hostname;
+        const candidatePorts = activePort
+          ? [activePort]
+          : (hostname === 'localhost' || hostname === '127.0.0.1' ? [8000, 5001] : [5001, 8000]);
 
-        await streamer.connect(wsUrl);
+        let connected = false;
+        for (const port of candidatePorts) {
+          try {
+            const wsUrl = `${wsProtocol}//${hostname}:${port}/ws/dictate`;
+            await streamer.connect(wsUrl);
+            activePort = port;
+            connected = true;
+            break;
+          } catch (_) {}
+        }
+
+        if (!connected) {
+          throw new Error('Backend port unreachable');
+        }
+
+        if (!isMounted) {
+          streamer.disconnect();
+          return;
+        }
         setIsConnected(true);
         setStatusText('Connected to Radiology STT Backend');
 
         // Initial config dispatch
         streamer.sendConfig({ model, vad_mode: vadMode });
       } catch (err) {
+        if (!isMounted) return;
         setIsConnected(false);
         setStatusText('Backend offline. Simulation mode active.');
-        setTimeout(connectWebSocket, 4000);
+        scheduleReconnect(4000);
+      } finally {
+        isConnecting = false;
       }
     };
 
+    connectWebSocketRef.current = connectWebSocket;
     connectWebSocket();
 
     // Streamer callbacks
     streamer.onStatus = (status) => {
+      if (!isMounted) return;
       if (status.state === 'connected') {
         setIsConnected(true);
         setStatusText(status.message || 'Connected to backend');
       } else if (status.state === 'disconnected') {
         setIsConnected(false);
         setStatusText('Disconnected from server. Reconnecting...');
-        setTimeout(connectWebSocket, 2000);
+        scheduleReconnect(2000);
       } else if (status.message) {
         setStatusText(status.message);
       }
@@ -111,6 +152,9 @@ export function App() {
     };
 
     return () => {
+      isMounted = false;
+      connectWebSocketRef.current = null;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       streamer.disconnect();
     };
   }, []);
@@ -164,8 +208,8 @@ export function App() {
       // Start recording
       baseTranscriptRef.current = transcript;
 
-      if (!isConnected) {
-        connectWebSocket();
+      if (!isConnected && connectWebSocketRef.current) {
+        connectWebSocketRef.current();
       }
 
       if (streamerRef.current) {
@@ -174,6 +218,7 @@ export function App() {
           setIsRecording(true);
         } catch (err) {
           console.warn('Direct mic streaming error:', err);
+          setStatusText(`Microphone error: ${err.message || 'Access denied'}`);
         }
       }
     }

@@ -28,17 +28,29 @@ export class AudioStreamer {
    * Establish WebSocket connection to backend.
    */
   async connect(wsUrl = `ws://${window.location.hostname}:5001/ws/dictate`) {
+    if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onclose = null;
+      try { this.ws.close(); } catch (_) {}
+      this.ws = null;
+    }
+
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(wsUrl);
-        this.ws.binaryType = 'arraybuffer';
+        let isOpened = false;
+        const ws = new WebSocket(wsUrl);
+        this.ws = ws;
+        ws.binaryType = 'arraybuffer';
 
-        this.ws.onopen = () => {
+        ws.onopen = () => {
+          isOpened = true;
           if (this.onStatus) this.onStatus({ state: 'connected', message: 'WebSocket connected' });
           resolve();
         };
 
-        this.ws.onmessage = (event) => {
+        ws.onmessage = (event) => {
           if (typeof event.data === 'string') {
             try {
               const data = JSON.parse(event.data);
@@ -49,14 +61,16 @@ export class AudioStreamer {
           }
         };
 
-        this.ws.onerror = (err) => {
-          console.error('WebSocket error:', err);
-          if (this.onError) this.onError('WebSocket connection error');
-          reject(err);
+        ws.onerror = (err) => {
+          if (!isOpened) {
+            reject(err);
+          }
         };
 
-        this.ws.onclose = () => {
-          if (this.onStatus) this.onStatus({ state: 'disconnected', message: 'WebSocket closed' });
+        ws.onclose = () => {
+          if (this.ws === ws && isOpened) {
+            if (this.onStatus) this.onStatus({ state: 'disconnected', message: 'WebSocket closed' });
+          }
         };
       } catch (err) {
         reject(err);
@@ -106,10 +120,13 @@ export class AudioStreamer {
 
     try {
       // 1. Acquire microphone stream
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Microphone access is not supported or not permitted in this context');
+      }
+
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
-          sampleRate: 16000,
           echoCancellation: true,
           noiseSuppression: false, // Keep noise suppression off so WebRTC VAD receives true background noise profile
           autoGainControl: true,
@@ -118,7 +135,13 @@ export class AudioStreamer {
 
       // 2. Initialize Web Audio Context
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.audioContext = new AudioCtx({ sampleRate: 16000 });
+      let audioCtx;
+      try {
+        audioCtx = new AudioCtx({ sampleRate: 16000 });
+      } catch (e) {
+        audioCtx = new AudioCtx();
+      }
+      this.audioContext = audioCtx;
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }

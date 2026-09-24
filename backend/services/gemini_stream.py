@@ -17,7 +17,7 @@ logger = logging.getLogger("gemini_stream")
 
 GEMINI_LIVE_URL = (
     "wss://generativelanguage.googleapis.com/ws/"
-    "google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
+    "google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 )
 
 
@@ -105,6 +105,7 @@ class GeminiLiveStreamer:
                     "generationConfig": {
                         "responseModalities": ["TEXT"],
                     },
+                    "inputAudioTranscription": {},
                     "systemInstruction": {
                         "parts": [{"text": get_gemini_system_instruction()}]
                     },
@@ -168,16 +169,17 @@ class GeminiLiveStreamer:
                 server_content = data.get("serverContent", {})
 
                 # 1. Check for real-time live input transcription
-                interim_transcription = (
-                    server_content.get("interimInputTranscription")
-                    or server_content.get("inputTranscription")
-                )
+                if "inputTranscription" in server_content and "text" in server_content["inputTranscription"]:
+                    raw_text = server_content["inputTranscription"]["text"]
+                    clean_text = format_spoken_punctuation(raw_text)
+                    self._last_transcript = ""
+                    if self.on_transcript_update:
+                        self.on_transcript_update(clean_text, True)
 
-                if interim_transcription and "text" in interim_transcription:
-                    raw_text = interim_transcription["text"]
+                elif "interimInputTranscription" in server_content and "text" in server_content["interimInputTranscription"]:
+                    raw_text = server_content["interimInputTranscription"]["text"]
                     clean_text = format_spoken_punctuation(raw_text)
                     self._last_transcript = clean_text
-
                     if self.on_transcript_update:
                         self.on_transcript_update(clean_text, False)
 
@@ -202,9 +204,13 @@ class GeminiLiveStreamer:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.warning("Gemini Live receive loop ended: %s", e)
-            if self.on_error:
-                self.on_error(f"Gemini streaming disconnected: {str(e)}")
+            err_str = str(e)
+            if "1008" in err_str or "aborted" in err_str.lower():
+                logger.info("Gemini Live session closed due to idle timeout (will reconnect on next speech)")
+            else:
+                logger.warning("Gemini Live receive loop ended: %s", e)
+                if self.on_error:
+                    self.on_error(f"Gemini streaming disconnected: {str(e)}")
         finally:
             self.is_connected = False
 

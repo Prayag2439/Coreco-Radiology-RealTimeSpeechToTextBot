@@ -5,8 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "5001:5001"
+    # No public port binding - backend is internal only.
+    # Frontend Nginx container reaches it via http://backend:5001 on the Docker network.
+    # Exposing port 5001 publicly would allow TLS connections from the browser to hit
+    # plain HTTP Uvicorn directly, causing "Invalid HTTP request received" warnings.
+    expose:
+      - "5001"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}

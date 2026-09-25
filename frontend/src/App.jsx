@@ -38,7 +38,7 @@ export function App() {
       reconnectTimer = setTimeout(connectWebSocket, delay);
     };
 
-    let activePort = null;
+    let activeUrl = null;
 
     const connectWebSocket = async () => {
       if (!isMounted || isConnecting) return;
@@ -46,23 +46,32 @@ export function App() {
       try {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const hostname = window.location.hostname;
-        const candidatePorts = activePort
-          ? [activePort]
-          : (hostname === 'localhost' || hostname === '127.0.0.1' ? [8000, 5001] : [5001, 8000]);
+        const host = window.location.host;
+
+        // In production (domain/HTTPS), connect strictly via same-origin reverse proxy (Nginx on 443).
+        // For local development on localhost/127.0.0.1, try local backend ports (8000/5001) first.
+        const candidateUrls = activeUrl
+          ? [activeUrl]
+          : (hostname === 'localhost' || hostname === '127.0.0.1')
+            ? [
+                `ws://${hostname}:8000/ws/dictate`,
+                `ws://${hostname}:5001/ws/dictate`,
+                `${wsProtocol}//${host}/ws/dictate`,
+              ]
+            : [`${wsProtocol}//${host}/ws/dictate`];
 
         let connected = false;
-        for (const port of candidatePorts) {
+        for (const wsUrl of candidateUrls) {
           try {
-            const wsUrl = `${wsProtocol}//${hostname}:${port}/ws/dictate`;
             await streamer.connect(wsUrl);
-            activePort = port;
+            activeUrl = wsUrl;
             connected = true;
             break;
           } catch (_) {}
         }
 
         if (!connected) {
-          throw new Error('Backend port unreachable');
+          throw new Error('Backend WebSocket unreachable');
         }
 
         if (!isMounted) {

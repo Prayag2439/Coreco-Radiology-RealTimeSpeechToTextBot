@@ -22,8 +22,8 @@ class VoiceActivityDetector:
         self,
         mode: int = 2,
         sample_rate: int = SAMPLE_RATE,
-        pre_padding_frames: int = 5,  # 50ms pre-buffer
-        hangover_frames: int = 30,    # 300ms hangover window
+        pre_padding_frames: int = 15,  # 150ms pre-buffer to prevent clipping initial syllables (e.g. 'L' in 'Lumbar')
+        hangover_frames: int = 30,     # 300ms hangover window
     ):
         self.sample_rate = sample_rate
         self.mode = mode

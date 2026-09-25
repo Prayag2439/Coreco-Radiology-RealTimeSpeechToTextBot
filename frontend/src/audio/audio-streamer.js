@@ -27,7 +27,13 @@ export class AudioStreamer {
   /**
    * Establish WebSocket connection to backend.
    */
-  async connect(wsUrl = `ws://${window.location.hostname}:5001/ws/dictate`) {
+  async connect(wsUrl) {
+    if (!wsUrl) {
+      const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = typeof window !== 'undefined' && window.location.host ? window.location.host : 'localhost:5001';
+      wsUrl = `${protocol}//${host}/ws/dictate`;
+    }
+
     if (this.ws) {
       this.ws.onopen = null;
       this.ws.onmessage = null;
@@ -128,7 +134,7 @@ export class AudioStreamer {
         audio: {
           channelCount: 1,
           echoCancellation: true,
-          noiseSuppression: false, // Keep noise suppression off so WebRTC VAD receives true background noise profile
+          noiseSuppression: true,
           autoGainControl: true,
         },
       });

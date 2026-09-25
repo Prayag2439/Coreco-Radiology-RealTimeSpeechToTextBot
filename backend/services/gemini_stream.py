@@ -47,6 +47,10 @@ def format_spoken_punctuation(text: str) -> str:
         (r'\bdeliver is\b', 'the liver is'),
         (r'\becho texture\b', 'echotexture'),
         (r'\bEcho texture\b', 'Echotexture'),
+        (r'\b[Nn]umber\s+load\s+[cC]\b', 'Lumbar lordosis'),
+        (r'\b[Nn]umber\s+lordosis\b', 'Lumbar lordosis'),
+        (r'\bneural\s+frames?\b', 'neural foramina'),
+        (r'\bintervertebral\s+disc\s+demonstrate\b', 'intervertebral discs demonstrate'),
     ]
     for p, r in homophones:
         text = re.sub(p, r, text)
@@ -104,6 +108,7 @@ class GeminiLiveStreamer:
                     "model": self.model,
                     "generationConfig": {
                         "responseModalities": ["TEXT"],
+                        "temperature": 0.0,
                     },
                     "inputAudioTranscription": {},
                     "systemInstruction": {
